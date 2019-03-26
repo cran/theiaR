@@ -215,6 +215,7 @@ its API (Application Programming Interface).</p>
 <li>Download tiles contained in a cart (<code>.meta4</code> file) obtained from Theia
 website.</li>
 <li>Extract archives</li>
+<li>Read tiles from zip files</li>
 </ul>
 
 <p><em>NOTE: ongoing development, more functionalities shall be added in the future</em></p>
@@ -251,14 +252,16 @@ from a query or from a cart file.</p>
 <p>will create a query to Theia database, looking for tiles from Sentinel2
 satellite around Grenoble, between 2018-07-01 and 2018-07-06.</p>
 
-<p>It accepts the following terms. Terms with a <code>*</code> are mandatory.</p>
+<p>It accepts the following terms.</p>
 
 <ul>
-<li><p><strong>collection*</strong>: The collection to look for. Accepted values are: <code>SENTINEL2</code>,
-<code>Landsat</code>, <code>SpotWorldHeritage</code>, <code>Snow</code>.</p></li>
+<li><p><strong>collection</strong>: The collection to look for. Accepted values are: <code>SENTINEL2</code>,
+<code>Landsat</code>, <code>SpotWorldHeritage</code>, <code>Snow</code>. Defaults to <code>SENTINEL2</code>.</p></li>
 <li><p><strong>platform</strong>: The platform to look for. Accepted values are: <code>LANDSAT5</code>,
 <code>LANDSAT7</code>, <code>LANDSAT8</code>, <code>SPOT1</code>, <code>SPOT2</code>, <code>SPOT3</code>, <code>SPOT4</code>, <code>SPOT5</code>,
 <code>SENTINEL2A</code>, <code>SENTINEL2B</code>.</p></li>
+<li><p><strong>level</strong>: Processing level of products. Accepted values are: <code>LEVEL1C</code>,
+<code>LEVEL2A</code> and <code>LEVEL3A</code>. Defaults to <code>&#39;LEVEL2A</code>.</p></li>
 </ul>
 
 <p>To specify the location of the tiles, several alternatives are available.
@@ -290,6 +293,13 @@ You can specify the town around which you want your data with:</p>
 <li><p><strong>lonmax</strong>: The maximum longitude to search.</p></li>
 </ul>
 
+<p>You can also look for a specific orbit number or relative orbit number:</p>
+
+<ul>
+<li><p><strong>orbit.number</strong>: The orbit number</p></li>
+<li><p><strong>rel.orbit.number</strong>: The relative orbit number</p></li>
+</ul>
+
 <p>Finally, you can filter results by giving the date range and the maximum cloud
 cover:</p>
 
@@ -301,20 +311,21 @@ cover:</p>
 
 <p>You can then create your collection with:</p>
 
-<pre><code class="r">mycollection &lt;- TheiaCollection$new(query = myquery, dir.path = &quot;.&quot;)
+<pre><code class="r">mycollection &lt;- TheiaCollection$new(query = myquery, dir.path = &quot;.&quot;, check = TRUE)
 </code></pre>
 
 <p>where <code>dir.path</code> is the path you want your tiles to be downloaded. If tiles are
 already present in <code>dir.path</code>, they will be checked by computing a checksum and
 comparing it to the hash provided by Theia (only available for Sentinel2 data,
 no hash is provided for other collections, and files are then assumed to be
-correct). This ensures that the files have been correctly downloaded.</p>
+correct). This ensures that the files have been correctly downloaded.
+downloaded. Set <code>check = FALSE</code> to skip file&#39;s check.</p>
 
 <pre><code class="r">print(mycollection)
 #&gt; An collection of tiles from Theia
 #&gt; 
 #&gt; Number of tiles: 11 
-#&gt; Directory path : &#39;.&#39;
+#&gt; Directory path : &#39;./&#39;
 #&gt; 
 #&gt; Obtained from query
 </code></pre>
@@ -331,13 +342,14 @@ the resulting <code>.meta4</code> file to your disk.</p>
 <pre><code class="r">cart.path &lt;- system.file(&quot;extdata&quot;, &quot;cart.meta4&quot;, package = &quot;theiaR&quot;)
 
 mycollection &lt;- TheiaCollection$new(cart.path = cart.path,
-                                    dir.path  = &quot;.&quot;)
+                                    dir.path  = &quot;.&quot;,
+                                    check     = TRUE)
 
 print(mycollection)
 #&gt; An collection of tiles from Theia
 #&gt; 
 #&gt; Number of tiles: 2 
-#&gt; Directory path : &#39;.&#39;
+#&gt; Directory path : &#39;./&#39;
 #&gt; 
 #&gt; Obtained from cart file
 </code></pre>
@@ -351,9 +363,12 @@ print(mycollection)
 collection by running:</p>
 
 <pre><code class="r">mycollection$status
-#&gt;                                             tile exists checked correct
-#&gt; SENTINEL2B_20190128-104831-308_L2A_T31TGK_D       FALSE   FALSE   FALSE
-#&gt; SENTINEL2A_20190113-104826-809_L2A_T31TGK_D       FALSE   FALSE   FALSE
+#&gt;                                          tile exists checked correct
+#&gt; 1 SENTINEL2B_20190128-104831-308_L2A_T31TGK_D  FALSE   FALSE   FALSE
+#&gt; 2 SENTINEL2A_20190113-104826-809_L2A_T31TGK_D  FALSE   FALSE   FALSE
+#&gt;   extracted
+#&gt; 1     FALSE
+#&gt; 2     FALSE
 </code></pre>
 
 <p>To download all tiles in a collection, simply run:</p>
@@ -380,6 +395,31 @@ files, run:</p>
 </code></pre>
 
 <p>which will extract tiles into the same directory as the archives.</p>
+
+<h3>Read bands from zip files</h3>
+
+<p>Alternatively, you can read bands directly from the zip archives (by using the
+<code>vsizip</code> interface provided by GDAL). Use:</p>
+
+<pre><code class="r">mytile$bands
+</code></pre>
+
+<p>to get a list of available bands. Then:</p>
+
+<pre><code class="r">mybands &lt;- mytile$read(bands = c(&quot;B5&quot;, &quot;B6&quot;))
+</code></pre>
+
+<p>to load the bands into memory (returns a <code>RasterStack</code> object). It performs the
+necessary corrections on the values.</p>
+
+<p>You can also read bands from a collection by running:</p>
+
+<pre><code class="r">mybands &lt;- mycollection$read(bands = c(&quot;B5&quot;, &quot;B6&quot;))
+</code></pre>
+
+<p>which returns a <code>list</code> of <code>RasterStack</code> objects.</p>
+
+<p><em>NOTE: loading several tiles needs a lot of memory (~900MB/tile)</em></p>
 
 <h2>Acknowledgment</h2>
 

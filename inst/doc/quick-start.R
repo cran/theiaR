@@ -14,7 +14,7 @@ myquery <- list(collection  = "SENTINEL2",
                 end.date    = "2018-07-06")
 
 ## ------------------------------------------------------------------------
-mycollection <- TheiaCollection$new(query = myquery, dir.path = ".")
+mycollection <- TheiaCollection$new(query = myquery, dir.path = ".", check = TRUE)
 
 ## ------------------------------------------------------------------------
 print(mycollection)
@@ -23,7 +23,8 @@ print(mycollection)
 cart.path <- system.file("extdata", "cart.meta4", package = "theiaR")
 
 mycollection <- TheiaCollection$new(cart.path = cart.path,
-                                    dir.path  = ".")
+                                    dir.path  = ".",
+                                    check     = TRUE)
 
 print(mycollection)
 
@@ -38,4 +39,13 @@ mycollection$status
 
 ## ---- eval=FALSE---------------------------------------------------------
 #  file.path <- mycollection$extract()
+
+## ---- eval=FALSE---------------------------------------------------------
+#  mytile$bands
+
+## ---- eval=FALSE---------------------------------------------------------
+#  mybands <- mytile$read(bands = c("B5", "B6"))
+
+## ---- eval=FALSE---------------------------------------------------------
+#  mybands <- mycollection$read(bands = c("B5", "B6"))
 

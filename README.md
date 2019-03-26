@@ -1,4 +1,8 @@
-[![Travis-CI Build Status](https://travis-ci.org/norival/theiaR.svg?branch=stable)](https://travis-ci.org/norival/theiaR)
+[![Travis-CI Build Status](https://travis-ci.org/norival/theiaR.svg?branch=master)](https://travis-ci.org/norival/theiaR)
+[![AppVeyor build status](https://ci.appveyor.com/api/projects/status/github/norival/theiaR?branch=master&svg=true)](https://ci.appveyor.com/project/norival/theiaR)
+[![Coverage status](https://codecov.io/gh/norival/theiaR/branch/master/graph/badge.svg)](https://codecov.io/github/norival/theiaR?branch=master)
+[![CRAN status](https://www.r-pkg.org/badges/version/theiaR)](https://cran.r-project.org/package=theiaR)
+[![lifecycle](https://img.shields.io/badge/lifecycle-maturing-blue.svg)](https://www.tidyverse.org/lifecycle/#maturing)
 
 # TheiaR: search, download and manage data from Theia
 
@@ -14,12 +18,19 @@ The basic functionalities are (for now):
 - Download tiles resulting from a search
 - Download tiles contained in a cart (`.meta4` file) obtained from Theia
   website.
-- Read images directly from the downloaded archives (without extracting the
-  archives, to save a lot of disk space, Sentinel2 only)
 - Extract archives
 
 
-_ NOTE: ongoing development, more functionalities shall be added in the future_
+_NOTE: ongoing development, more functionalities shall be added in the future_
+
+
+## Installation
+
+You can install the latest development version by using:
+
+```
+devtools::install_github('norival/theiaR')
+```
 
 
 ## Step-by-step guide
@@ -58,14 +69,17 @@ myquery <- list(collection  = "SENTINEL2",
 will create a query to Theia database, looking for tiles from Sentinel2
 satellite around Grenoble, between 2018-07-01 and 2018-07-31.
 
-It accepts the following terms. Terms with a `*` are mandatory.
+It accepts the following terms.
 
-* __collection*__: The collection to look for. Accepted values are: `SENTINEL2`,
-  `Landsat`, `SpotWorldHeritage`, `Snow`.
+* __collection__: The collection to look for. Accepted values are: `SENTINEL2`,
+  `Landsat`, `SpotWorldHeritage`, `Snow`. Defaults to `SENTINEL2`.
 
 * __platform__: The platform to look for. Accepted values are: `LANDSAT5`,
   `LANDSAT7`, `LANDSAT8`, `SPOT1`, `SPOT2`, `SPOT3`, `SPOT4`, `SPOT5`,
   `SENTINEL2A`, `SENTINEL2B`.
+
+* __level__: Processing level of products. Accepted values are: `LEVEL1C`,
+  `LEVEL2A` and `LEVEL3A`. Defaults to `'LEVEL2A`.
 
 
 To specify the location of the tiles, several alternatives are available.
@@ -96,8 +110,15 @@ Or you can specify a rectangle by giving its min/max coordinates:
 * __lonmax__: The maximum longitude to search.
 
 
-Finally, you can filter results by giving the date range and the maximum cloud
-cover:
+You can also look for a specific orbit number or relative orbit number:
+
+* __orbit.number__: The orbit number
+
+* __rel.orbit.number__: The relative orbit number
+
+
+Finally, you can filter results by giving the date range, the maximum cloud
+cover and the maximum of records:
 
 * __max.clouds__: The maximum of cloud cover wanted (0-100).
 
@@ -105,18 +126,21 @@ cover:
 
 * __end.date__: The last date to look for (format: `YYYY-MM-DD`).
 
+* __max.records__: The maximum of tiles to search
+
 
 You can then create your collection with:
 
 ```
-mycollection <- TheiaCollection$new(query = myquery, dir.path = ".")
+mycollection <- TheiaCollection$new(query = myquery, dir.path = ".", check = TRUE)
 ```
 
-where `dir.path` is the path you want your tiles to be downloaded. If tiles are
-already present in `dir.path`, they will be checked by computing a checksum and
-comparing it to the hash provided by Theia (only available for Sentinel2 data,
-no hash is provided for other collections, and files are then assumed to be
-correct). This ensures that the files have been correctly downloaded.
+where `dir.path` is the path you want your tiles to be further downloaded. If
+tiles are already present in `dir.path`, they will be checked by computing a
+checksum and comparing it to the hash provided by Theia (only available for
+Sentinel2 data, no hash is provided for other collections, and files are then
+assumed to be correct). This ensures that the files have been correctly
+downloaded. Set `check = FALSE` to skip file's check.
 
 
 #### Create a collection from a cart file
@@ -132,11 +156,28 @@ You can then create your collection using this file:
 cart.path <- system.file("extdata", "cart.meta4", package = "theiaR")
 
 mycollection <- TheiaCollection$new(cart.path = cart.path,
-                                    dir.path  = ".")
+                                    dir.path  = ".",
+                                    check     = TRUE)
 ```
 
 As above, it will check the hash of files if they are already present in
 `dir.path`.
+
+
+#### Getting information on your collection
+
+You can access the tiles from your collection using:
+
+```
+mycollection$tiles
+```
+
+which returns a `list` of tiles. You can also see the status of your collection
+with:
+
+```
+mycollection$status
+```
 
 
 ### Download your tiles
@@ -145,6 +186,8 @@ The next step is to download your collection. To download all tiles in a
 collection, simply run:
 
 ```
+myauth <- "path/to/auth/file.txt"
+
 mycollection$download(auth = myauth)
 ```
 
@@ -160,29 +203,6 @@ files, run:
 mycollection$download(auth = myauth, overwrite = TRUE)
 ```
 
-### Read your tiles
-
-Once you have downloaded every tile (as an archive), you can read images
-contained in the archive without extracting it. This allows to save a lot of
-disk space.
-
-First, get a list of bands available in the tiles by running:
-
-```{r , eval=FALSE}
-mycollection$get_bands()
-```
-
-Then you can read bands with:
-
-```{r , eval=FALSE}
-images.list <- mycollection$read(bands = c("B2", "B3")
-```
-
-where `bands` is a vector with bands names.
-
-It will return a list of `RasterLayer` objects, that you can manipulate with
-functions from the `raster` package.
-
 
 ### Extract tiles
 
@@ -195,13 +215,33 @@ file.path <- mycollection$extract()
 which will extract tiles into the same directory as the archives.
 
 
-## Installation
+### Read bands from zip files
 
-You can install the latest development version by using:
+Alternatively, you can read bands directly from the zip archives (by using the
+`vsizip` interface provided by GDAL). Use:
 
 ```
-devtools::install_github('norival/theiaR')
+mytile$bands
 ```
+
+to get a list of available bands. Then:
+
+```
+mybands <- mytile$read(bands = c("B5", "B6"))
+```
+
+to load the bands into memory (returns a `RasterStack` object). It performs the
+necessary corrections on the values.
+
+You can also read bands from a collection by running:
+
+```
+mybands <- mycollection$read(bands = c("B5", "B6"))
+```
+
+which returns a `list` of `RasterStack` objects.
+
+_NOTE: loading several tiles needs a lot of memory (~900MB/tile)_
 
 
 ## Acknowledgment
