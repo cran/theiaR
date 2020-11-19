@@ -65,20 +65,21 @@ TheiaTile <-
                  url            = NA,
                  tile.name      = NA,
                  path.extracted = NA,
+                 md             = NULL,
                  collection     = NA,
                  status         = list(exists    = FALSE,
                                        checked   = FALSE,
                                        correct   = FALSE,
                                        extracted = FALSE),
 
-                 initialize = function(file.path, url, tile.name, file.hash, check = TRUE, quiet = TRUE)
+                 initialize = function(file.path, url, tile.name, file.hash, collection = NULL, check = TRUE, quiet = TRUE)
                  {
                    if (quiet == TRUE) {
                      suppressMessages({
-                       .TheiaTile_initialize(self, file.path, url, tile.name, file.hash, check)
+                       .TheiaTile_initialize(self, file.path, url, tile.name, file.hash, collection, check)
                      })
                    } else {
-                     .TheiaTile_initialize(self, file.path, url, tile.name, file.hash, check)
+                     .TheiaTile_initialize(self, file.path, url, tile.name, file.hash, collection, check)
                    }
                  },
 
@@ -116,7 +117,11 @@ TheiaTile <-
           active =
             list(meta.data = function()
                  {
-                   .TheiaTile_read_md(self)
+                   if (is.null(self$md)) {
+                     return(.TheiaTile_read_md(self))
+                   }
+
+                   return(self$md)
                  },
 
                  bands = function()
@@ -144,16 +149,23 @@ TheiaTile <-
 }
 
 
-.TheiaTile_initialize <- function(self, file.path, url, tile.name, file.hash, check)
+.TheiaTile_initialize <- function(self, file.path, url, tile.name, file.hash, collection = NULL, check)
 {
   # Fill fields of the object
   self$file.path  <- file.path
   self$url        <- url
   self$tile.name  <- gsub("\\.tar\\.gz$|\\.zip$", "", tile.name)
   self$file.hash  <- file.hash
-  self$collection <- gsub("(.*)(/[^/]*$)", "\\2", self$file.path)
-  self$collection <- gsub("(^/)([[:alnum:]]*)(_.*$)", "\\2", self$collection)
-  self$collection <- gsub("([[:alnum:]]*)([[:alnum:]]{1}$)", "\\1", self$collection)
+
+  if (is.null(collection)) {
+    # try to guess the collection based on the file name (should be used only if
+    # the collection has been created from a cart file)
+    self$collection <- gsub("(.*)(/[^/]*$)", "\\2", self$file.path)
+    self$collection <- gsub("(^/)([[:alnum:]]*)(_.*$)", "\\2", self$collection)
+    self$collection <- gsub("([[:alnum:]]*)([[:alnum:]]{1}$)", "\\1", self$collection)
+  } else {
+    self$collection <- collection
+  }
 
   # check the tile
   self$check(check)
@@ -264,7 +276,7 @@ TheiaTile <-
 
   # get file name to extract
   file.name <- extraction_wrapper(self$file.path, args = list(list = TRUE))
-  file.name <- file.name[grepl("MTD_ALL\\.xml$", file.name)]
+  file.name <- file.name[grepl("\\.xml$", file.name)]
 
   # extract and parse xml file
   extraction_wrapper(self$file.path, args = list(files = file.name, exdir = tmp.dir))
@@ -273,6 +285,9 @@ TheiaTile <-
   # remove temporary file
   unlink(file.path(tmp.dir, file.name))
 
+  # store it in object so it we don't have to read again if we need it
+  self$md = meta.data
+
   return(meta.data)
 }
 
@@ -280,6 +295,16 @@ TheiaTile <-
 .TheiaTile_get_bands <- function(self)
 {
   # get bands list from meta data
+  if (self$collection == 'Landsat57') {
+    # Read the bands from the old format
+    bands = data.frame(
+      band       = unlist(strsplit(self$meta.data$RADIOMETRY$BANDS, ';')),
+      resolution = 'R1'
+    )
+
+    return(bands)
+  }
+
   bands <- lapply(self$meta.data$Product_Characteristics$Band_Group_List,
                   function(x) {
                     band.list <- unlist(x$Band_List[-(length(x$Band_List))])
@@ -297,6 +322,19 @@ TheiaTile <-
 
 .TheiaTile_read <- function(self, bands)
 {
+  if (self$collection == 'Landsat57') {
+    stop(
+      'This feature is not available for Landsat57 collection. You can read the bands manually with the `raster` library.',
+      call. = FALSE
+    )
+    # file.name <- paste0('/vsitar/', self$file.path, '/', self$meta.data$FILES$ORTHO_SURF_CORR_PENTE)
+    # tiles.stack <- raster::stack(file.name)
+    # names(tiles.stack) <- avail.bands
+    # tiles.stack = tiles.stack[[bands]]
+
+    # return(tiles.stack)
+  }
+
   # check if requested bands are available
   avail.bands <- self$bands
 

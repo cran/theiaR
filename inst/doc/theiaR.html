@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<meta name="author" content="Xavier Laviron" />
+
+<meta name="date" content="2020-11-14" />
+
+<title>Quick start guide to TheiaR package</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+<style type="text/css">
+a.anchor-section {margin-left: 10px; visibility: hidden; color: inherit;}
+a.anchor-section::before {content: '#';}
+.hasAnchor:hover a.anchor-section {visibility: visible;}
+</style>
+<script>// Anchor sections v1.0 written by Atsushi Yasumoto on Oct 3rd, 2020.
+document.addEventListener('DOMContentLoaded', function() {
+  // Do nothing if AnchorJS is used
+  if (typeof window.anchors === 'object' && anchors.hasOwnProperty('hasAnchorJSLink')) {
+    return;
+  }
+
+  const h = document.querySelectorAll('h1, h2, h3, h4, h5, h6');
+
+  // Do nothing if sections are already anchored
+  if (Array.from(h).some(x => x.classList.contains('hasAnchor'))) {
+    return null;
+  }
+
+  // Use section id when pandoc runs with --section-divs
+  const section_id = function(x) {
+    return ((x.classList.contains('section') || (x.tagName === 'SECTION'))
+            ? x.id : '');
+  };
+
+  // Add anchors
+  h.forEach(function(x) {
+    const id = x.id || section_id(x.parentElement);
+    if (id === '') {
+      return null;
+    }
+    let anchor = document.createElement('a');
+    anchor.href = '#' + id;
+    anchor.classList = ['anchor-section'];
+    x.classList.add('hasAnchor');
+    x.appendChild(anchor);
+  });
+});
+</script>
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css" data-origin="pandoc">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    for (var j = 0; j < rules.length; j++) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") continue;
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') continue;
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Quick start guide to TheiaR package</h1>
+<h4 class="author">Xavier Laviron</h4>
+<h4 class="date">2020-11-14</h4>
+
+
+
+<div id="theiar-search-download-and-manage-data-from-theia" class="section level1">
+<h1>TheiaR: search, download and manage data from Theia</h1>
+<p>The TheiaR package provides an efficient and clean interface to search, download and manage products from <a href="https://theia.cnes.fr/atdistrib/rocket/#/home">Theia website</a>.</p>
+<div id="overview" class="section level2">
+<h2>Overview</h2>
+<p>The basic functionalities are:</p>
+<ul>
+<li>Search available tiles through Theia API</li>
+<li>Download tiles resulting from a search</li>
+<li>Download tiles contained in a cart (<code>.meta4</code> file) obtained from Theia website.</li>
+<li>Read band into <code>RasterStack</code> objects (with the <code>raster</code> library)</li>
+<li>Read band into <code>gdalcubes</code> objects (with the <code>gdalcubes</code> library)</li>
+<li>Extract archives (not recommended)</li>
+</ul>
+<p><strong>NOTE:</strong> To search and download data from Theia, you will need to <a href="https://sso.theia-land.fr/theia/register/register.xhtml">register to their website</a>.</p>
+<p><strong>NOTE:</strong> In order to use <em>Landsat</em> or <em>SpotWorldHeritage</em> products, you’ll need to make a first manual download to agree to the license and validate your account.</p>
+</div>
+<div id="installation" class="section level2">
+<h2>Installation</h2>
+<p>You can install the latest stable version from Github with:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>devtools<span class="sc">::</span><span class="fu">install_github</span>(<span class="st">&#39;norival/theiaR&#39;</span>)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="co"># or, to install the development version</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>devtools<span class="sc">::</span><span class="fu">install_github</span>(<span class="st">&#39;norival/theiaR&#39;</span>, <span class="st">&#39;devel&#39;</span>)</span></code></pre></div>
+<p>Or, you can install it from CRAN:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">isntall.packages</span>(<span class="st">&#39;theiaR&#39;</span>)</span></code></pre></div>
+</div>
+<div id="complete-example" class="section level2">
+<h2>Complete example</h2>
+<p>A workflow to search and download tiles would be something like:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(theiaR)</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="co"># create a list containing the query</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>myquery <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="at">collection =</span> <span class="st">&quot;SENTINEL2&quot;</span>,</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>                <span class="at">town       =</span> <span class="st">&quot;Grenoble&quot;</span>,</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>                <span class="at">start.date =</span> <span class="st">&quot;2018-07-01&quot;</span>,</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>                <span class="at">end.date   =</span> <span class="st">&quot;2018-07-06&quot;</span>)</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="co"># create a collection from the query</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>mycollection <span class="ot">&lt;-</span> TheiaCollection<span class="sc">$</span><span class="fu">new</span>(<span class="at">query =</span> myquery, <span class="at">dir.path =</span> <span class="st">&quot;.&quot;</span>, <span class="at">check =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a><span class="co"># check available tiles fro the query</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>mycollection<span class="sc">$</span>status</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a><span class="co"># download the tiles into &#39;dir.path&#39;</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>mycollection<span class="sc">$</span><span class="fu">download</span>(<span class="at">auth =</span> <span class="st">&quot;path/to/auth/file.txt&quot;</span>)</span></code></pre></div>
+</div>
+<div id="step-by-step-guide" class="section level2">
+<h2>Step-by-step guide</h2>
+<p>First, load the package.</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(theiaR)</span></code></pre></div>
+<p>To search and download data from Theia, you will need to <a href="https://sso.theia-land.fr/theia/register/register.xhtml">register to their website</a>.</p>
+<p><strong>NOTE:</strong> In order to use <em>Landsat</em> or <em>SpotWorldHeritage</em> products, you’ll need to make a first manual download to agree to the license and validate your account.</p>
+<div id="create-a-collection-of-tiles" class="section level3">
+<h3>Create a collection of tiles</h3>
+<p>The first step is to create a collection of tile(s). This can be done either from a query or from a cart file.</p>
+<div id="create-a-collection-from-a-query" class="section level4">
+<h4>Create a collection from a query</h4>
+<p>A query is simply a named <code>list</code> of search terms. For example:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>myquery <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="at">collection =</span> <span class="st">&quot;SENTINEL2&quot;</span>,</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>                <span class="at">town       =</span> <span class="st">&quot;Grenoble&quot;</span>,</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>                <span class="at">start.date =</span> <span class="st">&quot;2018-07-01&quot;</span>,</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>                <span class="at">end.date   =</span> <span class="st">&quot;2018-07-06&quot;</span>)</span></code></pre></div>
+<p>will create a query to Theia database, looking for tiles from Sentinel2 satellite around Grenoble, between 2018-07-01 and 2018-07-06.</p>
+<p>It accepts the following terms.</p>
+<ul>
+<li><p><strong>collection</strong>: The collection to look for. Accepted values are: <code>SENTINEL2</code>, <code>LANDSAT</code>, <code>Landsat57</code>, <code>SpotWorldHeritage</code>, <code>Snow</code>. Defaults to <code>SENTINEL2</code>.</p></li>
+<li><p><strong>platform</strong>: The platform to look for. Accepted values are: <code>LANDSAT5</code>, <code>LANDSAT7</code>, <code>LANDSAT8</code>, <code>SPOT1</code>, <code>SPOT2</code>, <code>SPOT3</code>, <code>SPOT4</code>, <code>SPOT5</code>, <code>SENTINEL2A</code>, <code>SENTINEL2B</code>.</p></li>
+<li><p><strong>level</strong>: Processing level of products. Accepted values are: <code>LEVEL1C</code>, <code>LEVEL2A</code> and <code>LEVEL3A</code>, <code>N2A</code>. Defaults to <code>LEVEL2A</code> (or <code>N2A</code> if querying Landsat57 collection).</p></li>
+</ul>
+<p>To specify the location of the tiles, several alternatives are available. You can specify the town around which you want your data with:</p>
+<ul>
+<li><strong>town</strong>: The location to look for. Give a not too frequent town name.</li>
+</ul>
+<p>You can specify directly the tile ID if you know it:</p>
+<ul>
+<li><strong>tile</strong>: The tile identifier to retrieve (<em>e.g.</em> T31TGK)</li>
+</ul>
+<p>You can specify a point by giving its x/y coordinates:</p>
+<ul>
+<li><p><strong>latitude</strong>: The x coordinate of a point.</p></li>
+<li><p><strong>longitude</strong>: The y coordinate of a point.</p></li>
+</ul>
+<p>Or you can specify a rectangle by giving its min/max coordinates:</p>
+<ul>
+<li><p><strong>latmin</strong>: The minimum latitude to search.</p></li>
+<li><p><strong>latmax</strong>: The maximum latitude to search.</p></li>
+<li><p><strong>lonmin</strong>: The minimum longitude to search.</p></li>
+<li><p><strong>lonmax</strong>: The maximum longitude to search.</p></li>
+</ul>
+<p>You can also look for a specific orbit number or relative orbit number:</p>
+<ul>
+<li><p><strong>orbit.number</strong>: The orbit number</p></li>
+<li><p><strong>rel.orbit.number</strong>: The relative orbit number</p></li>
+</ul>
+<p>Finally, you can filter results by giving the date range and the maximum cloud cover:</p>
+<ul>
+<li><p><strong>max.clouds</strong>: The maximum of cloud cover wanted (0-100).</p></li>
+<li><p><strong>start.date</strong>: The first date to look for (format: <code>YYYY-MM-DD</code>).</p></li>
+<li><p><strong>end.date</strong>: The last date to look for (format: <code>YYYY-MM-DD</code>).</p></li>
+</ul>
+<p>You can then create your collection with:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>mycollection <span class="ot">&lt;-</span> TheiaCollection<span class="sc">$</span><span class="fu">new</span>(<span class="at">query =</span> myquery, <span class="at">dir.path =</span> <span class="st">&quot;.&quot;</span>, <span class="at">check =</span> <span class="cn">TRUE</span>)</span></code></pre></div>
+<p>where <code>dir.path</code> is the path you want your tiles to be further downloaded (This only queries Theia’s catalog for available tiles, nothing is downloaded). If tiles are already present in <code>dir.path</code>, they will be checked by computing a checksum and comparing it to the hash provided by Theia (only available for Sentinel2 data, no hash is provided for other collections, and files are then assumed to be correct). This ensures that the files have been correctly downloaded. Set <code>check = FALSE</code> to skip file’s check.</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(mycollection)</span></code></pre></div>
+</div>
+<div id="create-a-collection-from-a-cart-file" class="section level4">
+<h4>Create a collection from a cart file</h4>
+<p>Alternatively, you can download a cart from Theia. To create a cart, login to Theia website, make a <a href="https://theia.cnes.fr/atdistrib/rocket/#/home">search</a> for tiles, and add wanted tiles to your cart. Then, download your cart and save the resulting <code>.meta4</code> file to your disk.</p>
+<p>You can then create your collection using this file:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>cart.path <span class="ot">&lt;-</span> <span class="fu">system.file</span>(<span class="st">&quot;extdata&quot;</span>, <span class="st">&quot;cart.meta4&quot;</span>, <span class="at">package =</span> <span class="st">&quot;theiaR&quot;</span>)</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>mycollection <span class="ot">&lt;-</span> TheiaCollection<span class="sc">$</span><span class="fu">new</span>(<span class="at">cart.path =</span> cart.path,</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>                                    <span class="at">dir.path  =</span> <span class="st">&quot;.&quot;</span>,</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>                                    <span class="at">check     =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(mycollection)</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; An collection of tiles from Theia</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Number of tiles: 2 </span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Directory path : &#39;./&#39;</span></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Obtained from cart file</span></span></code></pre></div>
+<p>As above, it will check the hash of files if they are already present in <code>dir.path</code>.</p>
+</div>
+</div>
+<div id="download-your-tiles" class="section level3">
+<h3>Download your tiles</h3>
+<p>The next step is to download your collection. You can get the status of your collection by running:</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>mycollection<span class="sc">$</span>status</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;                                          tile exists checked correct extracted</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 SENTINEL2B_20190128-104831-308_L2A_T31TGK_D  FALSE   FALSE   FALSE     FALSE</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 SENTINEL2A_20190113-104826-809_L2A_T31TGK_D  FALSE   FALSE   FALSE     FALSE</span></span></code></pre></div>
+<p>To download all tiles in a collection, simply run:</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>mycollection<span class="sc">$</span><span class="fu">download</span>(<span class="at">auth =</span> myauth)</span></code></pre></div>
+<p>where myauth is the path to file storing your Theia credentials. If it does not exist yet, you will be securely prompted for your login and password, and the file will be created.</p>
+<p>This will check if files are present, check their hashes, and download them if needed (if files do not exist or checksums are wrong). To overwrite existing files, run:</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>mycollection<span class="sc">$</span><span class="fu">download</span>(<span class="at">auth =</span> myauth, <span class="at">overwrite =</span> <span class="cn">TRUE</span>)</span></code></pre></div>
+</div>
+<div id="read-bands-from-zip-files" class="section level3">
+<h3>Read bands from zip files</h3>
+<p>Alternatively, you can read bands directly from the zip archives (by using the <code>vsizip</code> interface provided by GDAL). Use:</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>mytile<span class="sc">$</span>bands</span></code></pre></div>
+<p>to get a list of available bands. Then:</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>mybands <span class="ot">&lt;-</span> mytile<span class="sc">$</span><span class="fu">read</span>(<span class="at">bands =</span> <span class="fu">c</span>(<span class="st">&quot;B5&quot;</span>, <span class="st">&quot;B6&quot;</span>))</span></code></pre></div>
+<p>to load the bands into memory (returns a <code>RasterStack</code> object). It performs the necessary corrections on the values.</p>
+<p>You can also read bands from a collection by running:</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>mybands <span class="ot">&lt;-</span> mycollection<span class="sc">$</span><span class="fu">read</span>(<span class="at">bands =</span> <span class="fu">c</span>(<span class="st">&quot;B5&quot;</span>, <span class="st">&quot;B6&quot;</span>))</span></code></pre></div>
+<p>which returns a <code>list</code> of <code>RasterStack</code> objects.</p>
+<p><em>NOTE: loading several tiles needs a lot of memory (~900MB/tile)</em></p>
+</div>
+<div id="create-a-gdalcubes-collection" class="section level3">
+<h3>Create a <code>gdalcubes</code> collection</h3>
+<p>Alternatively, you can use the great <a href="https://github.com/appelmar/gdalcubes_R">gdalcubes</a> package to create a three dimensional representation of the tiles. Simply run:</p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(gdalcubes)</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>gdalcubes <span class="ot">&lt;-</span> mycollection<span class="sc">$</span><span class="fu">as_gdalcube</span>(<span class="st">&quot;path/to/gdalcubes.sqlite&quot;</span>)</span></code></pre></div>
+<p>where <code>path/to/gdalcubes.sqlite</code> is the path to store the gdalcubes object data.</p>
+</div>
+<div id="extract-tiles" class="section level3">
+<h3>Extract tiles</h3>
+<p>If you want to extract the archives, you can run:</p>
+<div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>file.path <span class="ot">&lt;-</span> mycollection<span class="sc">$</span><span class="fu">extract</span>()</span></code></pre></div>
+<p>which will extract tiles into the same directory as the archives.</p>
+<p><strong>This is not recommended, as this will take a large amount of disk space</strong></p>
+</div>
+</div>
+<div id="acknowledgment" class="section level2">
+<h2>Acknowledgment</h2>
+<p>Thanks to Olivier Hagolle for his work on <code>theia_download.py</code> (<a href="https://theia.cnes.fr/atdistrib/rocket/#/home">github</a>), which has inspired this package.</p>
+</div>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

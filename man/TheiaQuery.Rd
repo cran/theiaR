@@ -42,17 +42,19 @@ input given by the user.
    Search criteria are given with a `list` accepting these fields:
    \itemize{
      \item{collection:} The collection to look for. Accepted values are:
-       'SENTINEL2', 'Landsat', 'SpotWorldHeritage', 'Snow'. Defaults to
-       'SENTINEL2'
+       'SENTINEL2', 'LANDSAT', 'Landsat57', 'SpotWorldHeritage', 'Snow'.
+       Defaults to 'SENTINEL2'
      \item{platform:} The platform to look for. Accepted values are:
        'LANDSAT5', 'LANDSAT7', 'LANDSAT8', 'SPOT1', 'SPOT2', 'SPOT3',
        'SPOT4', 'SPOT5', 'SENTINEL2A', 'SENTINEL2B'
      \item{level:} Processing level. Accepted values are: 'LEVEL1C',
-       'LEVEL2A', LEVEL3A'. Defaults to 'LEVEL2A'
+       'LEVEL2A', LEVEL3A', 'N2A'. Defaults to 'LEVEL2A' (or 'N2A' if
+       querying Landsat57 collection).
      \item{town:} The location to look for. Give a common town name.
      \item{tile:} The tile identifier to retrieve.
      \item{start.date:} The first date to look for (format: YYYY-MM-DD).
-     \item{end.date:} The last date to look for (format: YYYY-MM-DD).
+     \item{end.date:} The last date to look for (format: YYYY-MM-DD). Must be
+       after start.date. Defaults to today's date.
      \item{latitude:} The x coordinate of a point
      \item{longitude:} The y coordinate of a point
      \item{latmin:} The minimum latitude to search

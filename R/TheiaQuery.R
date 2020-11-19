@@ -33,17 +33,19 @@
 #'    Search criteria are given with a `list` accepting these fields:
 #'    \itemize{
 #'      \item{collection:} The collection to look for. Accepted values are:
-#'        'SENTINEL2', 'Landsat', 'SpotWorldHeritage', 'Snow'. Defaults to
-#'        'SENTINEL2'
+#'        'SENTINEL2', 'LANDSAT', 'Landsat57', 'SpotWorldHeritage', 'Snow'.
+#'        Defaults to 'SENTINEL2'
 #'      \item{platform:} The platform to look for. Accepted values are:
 #'        'LANDSAT5', 'LANDSAT7', 'LANDSAT8', 'SPOT1', 'SPOT2', 'SPOT3',
 #'        'SPOT4', 'SPOT5', 'SENTINEL2A', 'SENTINEL2B'
 #'      \item{level:} Processing level. Accepted values are: 'LEVEL1C',
-#'        'LEVEL2A', LEVEL3A'. Defaults to 'LEVEL2A'
+#'        'LEVEL2A', LEVEL3A', 'N2A'. Defaults to 'LEVEL2A' (or 'N2A' if
+#'        querying Landsat57 collection).
 #'      \item{town:} The location to look for. Give a common town name.
 #'      \item{tile:} The tile identifier to retrieve.
 #'      \item{start.date:} The first date to look for (format: YYYY-MM-DD).
-#'      \item{end.date:} The last date to look for (format: YYYY-MM-DD).
+#'      \item{end.date:} The last date to look for (format: YYYY-MM-DD). Must be
+#'        after start.date. Defaults to today's date.
 #'      \item{latitude:} The x coordinate of a point
 #'      \item{longitude:} The y coordinate of a point
 #'      \item{latmin:} The minimum latitude to search
@@ -180,14 +182,8 @@ TheiaQuery <-
   }
 
   # get fixed parts of links
-  private$server.url <-
-    ifelse(self$query$collection %in% c("Landsat", "SpotWorldHeritage"),
-           "https://theia-landsat.cnes.fr/",
-           "https://theia.cnes.fr/atdistrib/")
-  private$resto <-
-    ifelse(self$query$collection %in% c("Landsat", "SpotWorldHeritage"),
-           "resto/",
-           "resto2/")
+  private$server.url <- "https://theia.cnes.fr/atdistrib/"
+  private$resto      <- "resto2/"
 
   # fill query fields
   # build query links
@@ -195,7 +191,7 @@ TheiaQuery <-
   private$url <- paste0(private$server.url,
                         private$resto,
                         "api/collections/",
-                        query$collection,
+                        self$query$collection,
                         "/search.json?",
                         query.link)
 
@@ -235,11 +231,11 @@ TheiaQuery <-
 .TheiaQuery_check <- function(self, private)
 {
   # available choices
-  collection.choices <- c('Landsat', 'SpotWorldHeritage', 'SENTINEL2', 'Snow', 'VENUS')
+  collection.choices <- c('LANDSAT', 'Landsat57', 'SpotWorldHeritage', 'SENTINEL2', 'Snow', 'VENUS')
   platform.choices   <- c('LANDSAT5', 'LANDSAT7', 'LANDSAT8', 'SPOT1', 'SPOT2',
                           'SPOT3', 'SPOT4', 'SPOT5', 'SENTINEL2A', 'SENTINEL2B',
                           'VENUS')
-  level.choices      <- c('LEVEL1C', 'LEVEL2A', 'LEVEL3A')
+  level.choices      <- c('LEVEL1C', 'LEVEL2A', 'LEVEL3A', 'N2A')
 
   # check queries
   self$query$tile       <- parse_query(self$query$tile, "tile", "character")
@@ -251,9 +247,11 @@ TheiaQuery <-
                                        choices = platform.choices)
   self$query$level      <- parse_query(self$query$level, "level", "character",
                                        choices = level.choices,
-                                       default = "LEVEL2A")
+                                       default = ifelse(self$query$collection == 'Landsat57', 'N2A', "LEVEL2A"))
   self$query$start.date <- parse_query(self$query$start.date, "date", "character")
-  self$query$end.date   <- parse_query(self$query$end.date, "date", "character")
+  self$query$end.date   <- parse_query(self$query$end.date, "date", "character",
+                                       default = format(Sys.time(), "%Y-%m-%d")
+                                      )
   self$query$max.clouds <- parse_query(self$query$max.clouds, "max.clouds", "numeric",
                                        choices = 0:100)
   self$query$latitude   <- parse_query(self$query$latitude, "latitude", "numeric")
@@ -268,10 +266,23 @@ TheiaQuery <-
   self$query$max.records      <- parse_query(self$query$max.records, "max.records", "numeric",
                                              default = 500)
 
+  # check level compatibility with Landsat57 collection
+  # if (self$query$collection == 'Landsat57' && self$query$level != 'N2A') {
+  #   stop(
+  #     paste0("'", self$query$level, "' is not available for Landsat57 collection. Please use 'N2A'."),
+  #     call. = FALSE
+  #   )
+  # }
+
   # check for incompatible queries
   if (!(is.null(self$query$tile)) && self$query$collection != "SENTINEL2") {
     stop("'Tile' is only available for SENTINEL2 collection",
          call. = FALSE)
+  }
+
+  # check that start date is lower than end date
+  if (as.Date(self$query$end.date) - as.Date(self$query$start.date) <= 0) {
+    stop("Invalid query: date. Start date must be lower than end date")
   }
 
   # check if user has not specified both a point and a rectangle
@@ -308,6 +319,7 @@ TheiaQuery <-
 
     return(invisible(self))
   }
+  # print(private$catalog$features[[1]]$properties)
 
   # extract tiles
   cart <-
@@ -320,12 +332,23 @@ TheiaQuery <-
 
              # return important information
              data.frame(file.name   = paste0(x$properties$productIdentifier, file.ext),
-                        tile.id     = x$id,
-                        file.hash   = ifelse(is.null(x$properties$services$download$checksum),
-                                             NA,
-                                             x$properties$services$download$checksum),
-                        cloud.cover = as.numeric(as.character(x$properties$cloudCover)),
-                        snow.cover  = as.numeric(as.character(x$properties$snowCover)))
+                        tile.id     = ifelse(is.null(x$id), NA, x$id),
+                        file.hash   = ifelse(
+                          is.null(x$properties$services$download$checksum),
+                          NA,
+                          x$properties$services$download$checksum
+                        ),
+                        cloud.cover =
+                        ifelse(
+                          is.null(x$properties$cloudCover),
+                          NA,
+                          as.numeric(as.character(x$properties$cloudCover))
+                          ),
+                        snow.cover  = ifelse(
+                          is.null(x$properties$snowCover),
+                          NA,
+                          as.numeric(as.character(x$properties$snowCover))
+                        ))
            })
   self$tiles <- do.call(rbind, cart)
 
